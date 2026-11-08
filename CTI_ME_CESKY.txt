@@ -1,0 +1,39 @@
+SCULPTFORGE – EXPERIMENTÁLNÍ ÚPRAVA: BAREVNÉ VÝŠKY A ČEŠTINA
+========================================================
+
+Obsah balíčku
+-------------
+Toto je upravený ZDROJOVÝ KÓD projektu SculptForge, nikoli instalační program
+ani hotová aplikace pro Windows. Původní instalační verzi si ponechte.
+
+1. Čeština v nastavení: Preferences > Interface > Čeština.
+   První vydání obsahuje 409 českých překladů. Neznámé texty zůstávají
+   anglicky. Změny mají podporu českých znaků č, ř, ě, ů, š, ž a dalších.
+
+2. Barevné zobrazení podle výšky: Material > Height colours.
+   Režimy: Off (original), Rainbow a Greyscale.
+   Výběr osy: Y (svislá osa v SculptForge) nebo Z (jako v Blenderu).
+   Barevná stupnice se automaticky přizpůsobí výškovému rozsahu každé části.
+   Barvy jsou jen náhled – nepřepisují geometrii, malbu vrcholů ani export.
+   Zvolený režim a osa se ukládají s projektem.
+
+Ověřeno
+-------
+Překladové soubory byly úspěšně zkompilovány kompilátorem C++20;
+spustily se základní testy českých textů, diakritiky, přepínání jazyka
+a zachování původní angličtiny. Ověřena byla také podpora českých znaků
+v dodaném písmu Inter.
+
+DŮLEŽITÉ: Kompletní sestavení aplikace ani vykreslování v operačním
+systému Windows zatím nebylo vyzkoušeno. Barevné zobrazení je první
+experimentální implementace.
+
+Sestavení
+---------
+SculptForge je projekt v C++20 a CMake. Pro sestavení na Windows je třeba
+vývojové prostředí a závislosti projektu. Návod originálního projektu
+najdete v souborech README.md a docs/. Nestačí pouze otevřít ZIP.
+
+Licence původního projektu: GPL-3.0-or-later, viz LICENSE.
+
+8. listopadu 2026
