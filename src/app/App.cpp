@@ -1438,11 +1438,14 @@ void App::buildUiFonts(float scale) {
     }
     const bool recording = !options_.recordPath.empty() || !options_.uiTest.empty();
     // Inter (SIL OFL), embedded in the binary. Rasterised at the final size for crisp text.
+    // Czech letters (č, ď, ě, ň, ř, š, ť, ů, ž) lie outside Dear ImGui's default Latin-1 ranges.
+    static const ImWchar kCzechRanges[] = {0x0020, 0x00FF, 0x0100, 0x017F, 0};
+    const ImWchar* uiGlyphRanges = kCzechRanges; // all languages show the „Čeština“ option correctly
     ImFontConfig fontConfig;
     fontConfig.FontDataOwnedByAtlas = false;
     fontConfig.OversampleH = 2;
     fontRegular_ = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char*>(assets::fontRegular), int(assets::fontRegular_size),
-                                                  15.0f * scale, &fontConfig);
+                                                  15.0f * scale, &fontConfig, uiGlyphRanges);
     // Lucide icons (ISC/MIT) merged into the UI font, so ICON_LC_* strings work in any label.
     {
                 ImFontConfig icons;
@@ -1469,13 +1472,13 @@ void App::buildUiFonts(float scale) {
             mergeCjkFont(size * scale);
         };
         fontSmall_ = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char*>(assets::fontRegular),
-                                                    int(assets::fontRegular_size), 12.0f * scale, &fontConfig);
+                                                    int(assets::fontRegular_size), 12.0f * scale, &fontConfig, uiGlyphRanges);
         addIcons(12.0f);
         fontTiny_ = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char*>(assets::fontRegular),
-                                                   int(assets::fontRegular_size), 10.5f * scale, &fontConfig);
+                                                   int(assets::fontRegular_size), 10.5f * scale, &fontConfig, uiGlyphRanges);
         mergeCjkFont(10.5f * scale);
         fontBold_ = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char*>(assets::fontSemiBold),
-                                                   int(assets::fontSemiBold_size), 15.0f * scale, &fontConfig);
+                                                   int(assets::fontSemiBold_size), 15.0f * scale, &fontConfig, uiGlyphRanges);
         addIcons(15.0f);
                 ImFontConfig big;
         big.PixelSnapH = true;
@@ -1484,7 +1487,7 @@ void App::buildUiFonts(float scale) {
                                                     20.0f * scale, &big, kUsedIconRanges);
     }
     { // JetBrains Mono (SIL OFL) for the looks (Preferences > Interface > Look), with the icons and box drawing.
-        static const ImWchar kMonoRanges[] = {0x0020, 0x00FF, 0x2010, 0x2027, 0x2190, 0x21FF, 0x2500, 0x259F, 0x25A0, 0x25FF, 0};
+        static const ImWchar kMonoRanges[] = {0x0020, 0x017F, 0x2010, 0x2027, 0x2190, 0x21FF, 0x2500, 0x259F, 0x25A0, 0x25FF, 0};
                 auto addMono = [&](const unsigned char* data, unsigned long long size, float px) {
             ImFont* f = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char*>(data), int(size), px * scale, &fontConfig, kMonoRanges);
             ImFontConfig icons;

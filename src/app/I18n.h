@@ -24,8 +24,8 @@
 
 namespace sf {
 
-enum class Language { English, Spanish, TraditionalChinese, SimplifiedChinese };
-inline constexpr int kLanguageCount = 4;
+enum class Language { English, Spanish, TraditionalChinese, SimplifiedChinese, Czech };
+inline constexpr int kLanguageCount = 5;
 
 // The language tr() translates into (process-wide; Preferences > Interface sets it).
 void setLanguage(Language language);
@@ -53,6 +53,7 @@ struct Entry {
 };
 // The compiled-in tables (I18nSpanish.cpp, I18nTraditionalChinese.cpp, I18nSimplifiedChinese.cpp), for tests.
 std::span<const Entry> spanishTable();
+std::span<const Entry> czechTable();
 std::span<const Entry> traditionalChineseTable();
 std::span<const Entry> simplifiedChineseTable();
 std::span<const Entry> table(Language language); // empty for English

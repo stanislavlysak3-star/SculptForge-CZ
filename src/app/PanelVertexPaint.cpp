@@ -584,6 +584,22 @@ void App::drawPalette_Material() {
     ImGui::ColorEdit3(tr("Base colour"), &renderSettings_.baseColor.x, ImGuiColorEditFlags_NoInputs);
     ui::HelpText("Base colour", nullptr, "Colour of the Studio material (the clay colour).", "Material");
     drawShadingControls();
+    ImGui::Spacing();
+    ImGui::TextDisabled("%s", tr("Height colours"));
+    const char* heightModes[] = {tr("Off (original)"), tr("Rainbow"), tr("Greyscale")};
+    ImGui::SetNextItemWidth(-1);
+    ImGui::Combo("##height-colours", &renderSettings_.heightColorMode, heightModes, 3);
+    if (renderSettings_.heightColorMode != 0) {
+        ImGui::TextUnformatted(tr("Height axis"));
+        ImGui::SameLine();
+        ImGui::RadioButton("Y##height-axis", &renderSettings_.heightAxis, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Z##height-axis", &renderSettings_.heightAxis, 2);
+    }
+    ui::HelpText("Height colours", nullptr,
+                 "The sculpt's displayed colours depend on the selected height axis. This does not change vertex paint or exported colours.",
+                 "Material");
+    ui::HelpText("Height axis", nullptr, "Choose Y (up in SculptForge) or Z (as in Blender).", "Material");
     drawViewportShadingControls();
     drawLightControls(); // PanelView.cpp
     ImGui::Spacing();

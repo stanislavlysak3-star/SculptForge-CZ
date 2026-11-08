@@ -33,10 +33,12 @@ Table makeMap(std::span<const i18n::Entry> entries) {
 }
 const Table* tableMap(Language language) {
     static const Table spanish = makeMap(i18n::spanishTable());
+    static const Table czech = makeMap(i18n::czechTable());
     static const Table traditional = makeMap(i18n::traditionalChineseTable());
     static const Table simplified = makeMap(i18n::simplifiedChineseTable());
     switch (language) {
     case Language::Spanish: return &spanish;
+    case Language::Czech: return &czech;
     case Language::TraditionalChinese: return &traditional;
     case Language::SimplifiedChinese: return &simplified;
     default: return nullptr;
@@ -113,6 +115,7 @@ Language language() { return Language(g_language.load()); }
 const char* languageCode(Language language) {
     switch (language) {
     case Language::Spanish: return "es";
+    case Language::Czech: return "cs";
     case Language::TraditionalChinese: return "zh-TW";
     case Language::SimplifiedChinese: return "zh-CN";
     default: return "en";
@@ -123,6 +126,7 @@ Language languageFromCode(std::string_view code) {
     auto is = [&](std::string_view c) { return code == c || (code.size() > c.size() && code.substr(0, c.size()) == c &&
                                                              (code[c.size()] == '-' || code[c.size()] == '_')); };
     if (is("es")) return Language::Spanish;
+    if (is("cs")) return Language::Czech;
     // Traditional script: zh-TW, zh-HK, zh-MO and zh-Hant-*. Simplified: zh-CN, zh-SG, zh-Hans-* and a bare zh.
     if (is("zh-TW") || is("zh_TW") || is("zh-HK") || is("zh_HK") || is("zh-MO") || is("zh_MO") || is("zh-Hant") ||
         is("zh_Hant"))
@@ -134,6 +138,7 @@ Language languageFromCode(std::string_view code) {
 const char* languageName(Language language) {
     switch (language) {
     case Language::Spanish: return "Español";
+    case Language::Czech: return "Čeština";
     case Language::TraditionalChinese: return "繁體中文";
     case Language::SimplifiedChinese: return "简体中文";
     default: return "English";
@@ -149,6 +154,7 @@ namespace i18n {
 std::span<const Entry> table(Language language) {
     switch (language) {
     case Language::Spanish: return spanishTable();
+    case Language::Czech: return czechTable();
     case Language::TraditionalChinese: return traditionalChineseTable();
     case Language::SimplifiedChinese: return simplifiedChineseTable();
     default: return {};

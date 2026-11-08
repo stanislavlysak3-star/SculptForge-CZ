@@ -408,6 +408,8 @@ void App::storeProjectSettings() {
     render.set("wireframe", renderSettings_.wireframe);
     render.set("base_color", vec3Json(renderSettings_.baseColor));
     render.set("show_vertexpaint", renderSettings_.showVertexPaint);
+    render.set("height_color_mode", renderSettings_.heightColorMode);
+    render.set("height_axis", renderSettings_.heightAxis);
     render.set("color_tints_material", renderSettings_.colorTintsMaterial);
     render.set("show_mask", renderSettings_.showMask);
     render.set("show_facegroups", renderSettings_.showFaceGroups);
@@ -547,6 +549,8 @@ void App::applyProjectSettings() {
         readBool(r, "wireframe", renderSettings_.wireframe);
         readVec3(r["base_color"], renderSettings_.baseColor);
         readBool(r, "show_vertexpaint", renderSettings_.showVertexPaint);
+        renderSettings_.heightColorMode = std::clamp(int(r["height_color_mode"].asNumber(0)), 0, 2);
+        renderSettings_.heightAxis = int(r["height_axis"].asNumber(1)) == 2 ? 2 : 1;
         readBool(r, "color_tints_material", renderSettings_.colorTintsMaterial);
         readBool(r, "show_mask", renderSettings_.showMask);
         readBool(r, "show_facegroups", renderSettings_.showFaceGroups);
