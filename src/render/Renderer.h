@@ -28,6 +28,10 @@ class MicroRenderer;
 struct RenderSettings {
     bool wireframe = false;
     glm::vec3 baseColor{0.62f, 0.58f, 0.53f}; // Studio's colour: a warm clay grey, like the default Soft Clay
+    // Preview only: 0 = original material, 1 = rainbow height map, 2 = grayscale height map.
+    // SculptForge uses Y as up; axis 2 allows Blender-like Z measurements.
+    int heightColorMode = 0;
+    int heightAxis = 1;
     bool showVertexPaint = true;   // vertex colours replace baseColor when the mesh has them
     // The active colour tints the Lit Sphere material on meshes with no vertex paint (Color palette, as the classic
     // main colour does): materialTint multiplies the material there, white leaves it as it is (materialTintFor).
@@ -561,6 +565,7 @@ private:
               showMask = -1, maskDarkness = -1, groups = -1, litsphere = -1, litsphereCavity = -1, dim = -1, primBase = -1,
               hasPaint = -1, normalFlipY = -1, twoSided = -1, checker = -1, checkerScale = -1, tintShift = -1, lightRot = -1,
               lightLevels = -1, alpha = -1, microWire = -1;
+        GLint heightMode = -1, heightAxis = -1, heightRange = -1, heightInverse = -1;
         GLint hasOrm = -1, hasEmissive = -1, hasMatNormal = -1, envLevels = -1, exposure = -1, toneMap = -1, material = -1,
               pbrCavity = -1, viewToEnv = -1, sh = -1;
         GLint ghostGroups = -1, ghostRange = -1, ghostEdge = -1, ghostA = -1, ghostB = -1, ghostC = -1, ghostBound = -1, ghostKind = -1, ghostFocal = -1;
@@ -569,6 +574,7 @@ private:
                          kPbr = 128;
     MeshProgram programs_[256];
     void drawMicro(const MeshSlot& s, bool active, bool flat, const RenderSettings& settings);
+    void setHeightUniforms(const MeshProgram& p, const MeshSlot& s, const RenderSettings& settings) const;
     std::string programError_;
     const MeshProgram* meshProgram(int features);
     bool vertexIdHasBase_ = true; // gl_VertexID includes the base vertex (checked at init; else per-cluster draws)

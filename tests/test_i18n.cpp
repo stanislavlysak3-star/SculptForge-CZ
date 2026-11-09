@@ -160,6 +160,19 @@ TEST(i18n_keeps_ids_icons_and_tails) {
     CHECK(std::string(tr("Decimate##decimate")) == "Decimate##decimate");
 }
 
+TEST(i18n_czech_basics) {
+    using namespace sf;
+    CHECK(languageFromCode("cs") == Language::Czech);
+    CHECK(languageFromCode("cs-CZ") == Language::Czech);
+    CHECK(std::string(languageCode(Language::Czech)) == "cs");
+    CHECK(std::string(languageName(Language::Czech)) == "Čeština");
+    LanguageScope scope(Language::Czech);
+    CHECK(std::string(tr("Brush")) == "Štětec");
+    CHECK(std::string(tr("Decimate##decimate")) == "Zredukovat síť##decimate");
+    CHECK(std::string(tr("Height colours")) == "Barvy podle výšky");
+    CHECK(trPath("Tool > Geometry") == "Nástroj > Geometrie");
+}
+
 TEST(i18n_language_codes) {
     CHECK(std::string(languageCode(Language::English)) == "en");
     CHECK(std::string(languageCode(Language::Spanish)) == "es");
@@ -190,7 +203,7 @@ TEST(i18n_language_codes) {
 }
 
 TEST(i18n_tables_are_well_formed) {
-  for (const Language lang : {Language::Spanish, Language::TraditionalChinese, Language::SimplifiedChinese}) {
+  for (const Language lang : {Language::Spanish, Language::TraditionalChinese, Language::SimplifiedChinese, Language::Czech}) {
     std::set<std::string_view> seen;
     int problems = 0;
     for (const i18n::Entry& e : i18n::table(lang)) {

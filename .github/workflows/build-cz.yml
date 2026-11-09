@@ -1,0 +1,41 @@
+name: SculptForge CZ - sestaveni Windows
+on:
+  push:
+    branches:
+      - opravy-cestina-barevne-vysky
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    name: Sestavit prenosny SculptForge CZ
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - name: Stahnout kod
+        uses: actions/checkout@v4
+      - name: Konfigurace projektu
+        shell: pwsh
+        run: |
+          cmake -S . -B build -DSCULPTFORGE_USE_SYSTEM_SDL=OFF -DSCULPTFORGE_BUILD_TESTS=OFF -DSCULPTFORGE_PACKAGE_SUFFIX=cz -DCMAKE_BUILD_TYPE=Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Sestaveni EXE
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --parallel 3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prenosny ZIP
+        shell: pwsh
+        run: |
+          Push-Location build
+          cpack -C Release -G ZIP
+          $exitCode = $LASTEXITCODE
+          Pop-Location
+          if ($exitCode -ne 0) { exit $exitCode }
+      - name: Program ke stazeni
+        uses: actions/upload-artifact@v4
+        with:
+          name: SculptForge-CZ-Windows
+          path: build/*.zip
+          if-no-files-found: error
+          retention-days: 14

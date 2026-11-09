@@ -381,6 +381,11 @@ void microFetch() {
 uniform vec4 uViewport;  // the view's rectangle in window pixels
 uniform vec2 uProjScale; // projection x and y scale
 uniform vec3 uBaseColor;
+// Height preview: unproject the fragment to mesh-local geometry.
+uniform int uHeightMode;       // 0 = off, 1 = rainbow, 2 = grayscale
+uniform int uHeightAxis;       // 1 = Y up, 2 = Z
+uniform vec2 uHeightRange;     // local mesh bounds along the selected axis
+uniform mat4 uHeightInverse;   // inverse(uProj * uView)
 uniform vec3 uTintShift; // the material tint less 1 (0, the default, is no tint): the active colour, no vertex paint
 uniform int uPaint;      // 1: vertex colours replace the base colour
 uniform int uShowMask;   // 1: darken masked areas
@@ -427,6 +432,19 @@ vec3 groupColor(uint id) {
     float val = 0.70 + 0.25 * float((h >> 24) & 0xFFu) / 255.0;
     vec3 rgb = clamp(abs(fract(hue + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
     return val * mix(vec3(1.0), rgb, sat);
+}
+vec3 heightColour(float t) {
+    t = clamp(t, 0.0, 1.0);
+    if (uHeightMode == 2) return vec3(0.08 + 0.85 * t);
+    vec3 a = vec3(0.05, 0.12, 0.55);
+    vec3 b = vec3(0.00, 0.75, 0.85);
+    vec3 c = vec3(0.18, 0.73, 0.24);
+    vec3 d = vec3(1.00, 0.80, 0.08);
+    vec3 e = vec3(0.85, 0.10, 0.08);
+    if (t < 0.25) return mix(a, b, t * 4.0);
+    if (t < 0.50) return mix(b, c, (t - 0.25) * 4.0);
+    if (t < 0.75) return mix(c, d, (t - 0.50) * 4.0);
+    return mix(d, e, (t - 0.75) * 4.0);
 }
 vec3 faceColor(uint c) {
     return pow(vec3(float(c & 255u), float((c >> 8) & 255u), float((c >> 16) & 255u)) / 255.0, vec3(2.2));
@@ -530,6 +548,14 @@ void main() {
     if (uChecker == 1) albedo = tint = (uGroups == 3 ? albedo : vec3(1.0)) * checkerColor(vUv);
     else if (uGroups == 0) albedo = tint = (uPaint == 1 ? V_COLOR : vec3(1.0)) * texture(uPaintTex, vUv).rgb;
 #endif
+    if (uHeightMode != 0) {
+        vec2 xy = (gl_FragCoord.xy - uViewport.xy) / uViewport.zw * 2.0 - 1.0;
+        vec4 hit = uHeightInverse * vec4(xy, gl_FragCoord.z * 2.0 - 1.0, 1.0);
+        vec3 local = hit.xyz / max(abs(hit.w), 1e-20) * sign(hit.w);
+        float h = uHeightAxis == 2 ? local.z : local.y;
+        float t = (h - uHeightRange.x) / max(uHeightRange.y - uHeightRange.x, 1e-6);
+        albedo = tint = heightColour(t);
+    }
 #ifdef FLAT
     // The triangle's own normal, from its plane's screen-space slopes, turned towards the viewer: a back face (seen
     // through a hole) keeps it that way unless it is the motion proxy's, which shades back faces turned away.
@@ -1048,6 +1074,10 @@ const Renderer::MeshProgram* Renderer::meshProgram(int features) {
     p.viewport = at("uViewport");
     p.projScale = at("uProjScale");
     p.baseColor = at("uBaseColor");
+    p.heightMode = at("uHeightMode");
+    p.heightAxis = at("uHeightAxis");
+    p.heightRange = at("uHeightRange");
+    p.heightInverse = at("uHeightInverse");
     p.tintShift = at("uTintShift");
     p.paint = at("uPaint");
     p.showMask = at("uShowMask");
@@ -3557,6 +3587,18 @@ void Renderer::updateCoarse(MeshSlot& s, const Mesh& mesh) {
     s.coarsePending.clear();
 }
 
+void Renderer::setHeightUniforms(const MeshProgram& p, const MeshSlot& s, const RenderSettings& settings) const {
+    gl::Uniform1i(p.heightMode, settings.heightColorMode);
+    if (settings.heightColorMode == 0) return;
+    const int axis = settings.heightAxis == 2 ? 2 : 1;
+    const float low = s.box.valid() ? s.box.min[axis] : 0.0f;
+    const float high = s.box.valid() ? s.box.max[axis] : 1.0f;
+    gl::Uniform1i(p.heightAxis, axis);
+    gl::Uniform2f(p.heightRange, low, high);
+    const glm::mat4 inverse = glm::inverse(frameProj_ * frameView_);
+    gl::UniformMatrix4fv(p.heightInverse, 1, GL_FALSE, glm::value_ptr(inverse));
+}
+
 void Renderer::drawMicro(const MeshSlot& s, bool active, bool flat, const RenderSettings& settings) {
     const MeshProgram* p = meshProgram(kMicro | (flat ? kFlat : 0) | (settings.pbr() && envTexture_ ? kPbr : 0));
     if (!p) return;
@@ -3568,6 +3610,7 @@ void Renderer::drawMicro(const MeshSlot& s, bool active, bool flat, const Render
     const bool orthographic = frameProj_[3][3] == 1.0f;
     gl::Uniform2f(p->projScale, orthographic ? 1e20f : frameProj_[0][0], orthographic ? 1e20f : frameProj_[1][1]);
     gl::Uniform3fv(p->baseColor, 1, glm::value_ptr(settings.baseColor));
+    setHeightUniforms(*p, s, settings);
     gl::Uniform3fv(p->tintShift, 1, glm::value_ptr(materialTintShift(settings, s.hasColors)));
     gl::Uniform1i(p->litsphere, litsphereTexture(settings.litsphere) ? 1 : 0);
     const LitSphereCavity cavity = litsphereCavity(settings.litsphere);
@@ -3642,6 +3685,7 @@ void Renderer::drawSlot(const MeshSlot& s, bool active, bool flat, const RenderS
     const bool orthographic = frameProj_[3][3] == 1.0f;
     gl::Uniform2f(p->projScale, orthographic ? 1e20f : frameProj_[0][0], orthographic ? 1e20f : frameProj_[1][1]);
     gl::Uniform3fv(p->baseColor, 1, glm::value_ptr(settings.baseColor));
+    setHeightUniforms(*p, s, settings);
     gl::Uniform3fv(p->tintShift, 1, glm::value_ptr(materialTintShift(settings, s.hasColors)));
     gl::Uniform1i(p->litsphere, litsphereTexture(settings.litsphere) ? 1 : 0);
     const LitSphereCavity cavity = litsphereCavity(settings.litsphere);
